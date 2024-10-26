@@ -70,7 +70,7 @@ export function validateAddress(network: Network, address: string): void {
     ![Network.MAINNET, Network.SIGNET, Network.TESTNET].includes(network)
   ) {
     throw new Error(
-      `Unsupported network: ${network}. Please provide a valid network.`,
+      `Please provide a valid network. ${network}. `,
     );
   }
 }
