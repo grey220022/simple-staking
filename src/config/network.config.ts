@@ -69,8 +69,6 @@ export function validateAddress(network: Network, address: string): void {
   } else if (
     ![Network.MAINNET, Network.SIGNET, Network.TESTNET].includes(network)
   ) {
-    throw new Error(
-      `Please provide a valid network. ${network}. `,
-    );
+    throw new Error(`Please provide a valid network. ${network}. `);
   }
 }

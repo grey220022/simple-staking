@@ -40,7 +40,7 @@ export const isStakingSignReady = (
       isReady: false,
       reason: "Please enter a valid staking period",
     };
-  } else if (stakingFeeSat === 0) {
+  } else if (false) {
     // This is a temporary solution when the fee is not calculated or throw an error
     // the staking fee is set to 0 by stakingFeeSat from staking.tsx
     return {

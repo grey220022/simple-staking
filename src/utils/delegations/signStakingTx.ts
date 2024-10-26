@@ -38,11 +38,11 @@ export const createStakingTx = (
   ) {
     throw new Error("Invalid staking data");
   }
-
+  /*
   if (inputUTXOs.length == 0) {
     throw new Error("Not enough usable balance");
   }
-
+*/
   if (feeRate <= 0) {
     throw new Error("Invalid fee rate");
   }

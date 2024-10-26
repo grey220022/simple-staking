@@ -229,7 +229,6 @@ export const Staking = () => {
       if (!feeRate) throw new Error("Fee rates not loaded");
       if (!availableUTXOs || availableUTXOs.length === 0)
         throw new Error("No available balance");
-
       // Sign the staking transaction
       const { stakingTxHex, stakingTerm } = await signStakingTx(
         signPsbt,
