@@ -1,5 +1,7 @@
+import TransportWebBLE from "@ledgerhq/hw-transport-web-ble";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Transaction } from "bitcoinjs-lib";
+import { AppClient, DefaultWalletPolicy } from "ledger-bitcoin";
 import { useEffect, useMemo, useState } from "react";
 import { Tooltip } from "react-tooltip";
 import { useLocalStorage } from "usehooks-ts";
@@ -22,10 +24,7 @@ import {
   FinalityProvider as FinalityProviderInterface,
 } from "@/app/types/finalityProviders";
 import { getNetworkConfig } from "@/config/network.config";
-import {
-  createStakingTx,
-  signStakingTx,
-} from "@/utils/delegations/signStakingTx";
+import { createStakingTx } from "@/utils/delegations/signStakingTx";
 import { getFeeRateFromMempool } from "@/utils/getFeeRateFromMempool";
 import { isStakingSignReady } from "@/utils/isStakingSignReady";
 import { toLocalStorageDelegation } from "@/utils/local_storage/toLocalStorageDelegation";
@@ -38,7 +37,6 @@ import { StakingAmount } from "./Form/StakingAmount";
 import { StakingFee } from "./Form/StakingFee";
 import { StakingTime } from "./Form/StakingTime";
 import { Message } from "./Form/States/Message";
-import { WalletNotConnected } from "./Form/States/WalletNotConnected";
 import apiNotAvailable from "./Form/States/api-not-available.svg";
 import geoRestricted from "./Form/States/geo-restricted.svg";
 import stakingCapReached from "./Form/States/staking-cap-reached.svg";
@@ -220,13 +218,43 @@ export const Staking = () => {
       // Prevent the modal from closing
       setAwaitingWalletResponse(true);
       // Initial validation
-      if (!connected) throw new Error("Wallet is not connected");
-      if (!address) throw new Error("Address is not set");
-      if (!btcWalletNetwork) throw new Error("Wallet network is not connected");
+      //if (!connected) throw new Error("Wallet is not connected");
+      //if (!address) throw new Error("Address is not set");
+      //if (!btcWalletNetwork) throw new Error("Wallet network is not connected");
       if (!finalityProvider)
         throw new Error("Finality provider is not selected");
       if (!currentVersion) throw new Error("Global params not loaded");
-      if (!feeRate) throw new Error("Fee rates not loaded");
+      //if (!feeRate) throw new Error("Fee rates not loaded");
+
+      const transport = await TransportWebBLE.create();
+      const app = new AppClient(transport);
+
+      // todo replace the following code with a real babylon staking transaction
+      /*
+      const walletPolicy = new WalletPolicy(
+        "Taproot foreign internal key, and our script key",
+        "tr(@0/**,pk(@1/**))",
+        [
+          "[76223a6e/48'/1'/0'/2']tpubDE7NQymr4AFtewpAsWtnreyq9ghkzQBXpCZjWLFVRAvnbf7vya2eMTvT2fPapNqL8SuVvLQdbUbMfWLVDCZKnsEBqp6UK93QEzL8Ck23AwF",
+          "[f5acc2fd/48'/1'/0'/2']tpubDFAqEGNyad35aBCKUAXbQGDjdVhNueno5ZZVEn3sQbW5ci457gLR7HyTmHBg93oourBssgUxuWz1jX5uhc1qaqFo9VsybY1J5FuedLfm4dK",
+        ]
+      );*/
+      const fpr = await app.getMasterFingerprint();
+
+      const walletPolicy = new DefaultWalletPolicy(
+        "tr(@0/**)",
+        `[${fpr}/86'/1'/0']tb1pm4ncypnwumdcyyea28nz3vv2zq3d5vzsxpzrzsuas9q7jdy6krts5rgus9`,
+      );
+
+      const hmac = Buffer.from(
+        "dae925660e20859ed8833025d46444483ce264fdb77e34569aabe9d590da8fb7",
+        "hex",
+      );
+      const psbtBase64 =
+        "cHNidP8BAgQCAAAAAQMEAAAAAAEEAQEBBQEBAfsEAgAAAAABAStMBgAAAAAAACJRIPwKENMIx+QbS7w2Qvj9isKJhTsc51WgxtDUlfA9ny2kAQMEAQAAACIVwVAXEIvs6o3txTALsiOGs6swNnrCYvnOXlgybrg+OiL1IyBrFujB+Xn6TMDwW2owCv//lBRZtvIN533lWwFg745MrKzAIRZQFxCL7OqN7cUwC7IjhrOrMDZ6wmL5zl5YMm64Pjoi9R0AdiI6bjAAAIABAACAAAAAgAIAAIAAAAAAAAAAACEWaxbowfl5+kzA8FtqMAr//5QUWbbyDed95VsBYO+OTKw9AQku2gM2F+IQ7n99DjeKQErqHEi1aqEDAivs93RuRwCk9azC/TAAAIABAACAAAAAgAIAAIAAAAAAAAAAAAEXIFAXEIvs6o3txTALsiOGs6swNnrCYvnOXlgybrg+OiL1ARggCS7aAzYX4hDuf30ON4pASuocSLVqoQMCK+z3dG5HAKQBDiAfwcxXccuDhgzFbZS8/tk4YIwX9jZiQ1tB6cRP/P0xQgEPBAEAAAABEAT9////AAEDCDkFAAAAAAAAAQQWABSqjvN0yvrfynaQLdtc9hxgu/2dhQA=";
+      const result = await app.signPsbt(psbtBase64, walletPolicy, hmac);
+
+      /*
       if (!availableUTXOs || availableUTXOs.length === 0)
         throw new Error("No available balance");
       // Sign the staking transaction
@@ -248,7 +276,7 @@ export const Staking = () => {
       // UI
       handleFeedbackModal("success");
       handleLocalStorageDelegations(stakingTxHex, stakingTerm);
-      handleResetState();
+      handleResetState();*/
     } catch (error: Error | any) {
       showError({
         error: {
@@ -490,8 +518,8 @@ export const Staking = () => {
       );
     }
     // Wallet is not connected
-    else if (!connected) {
-      return <WalletNotConnected />;
+    else if (false) {
+      return null;
     }
     // Wallet is connected but we are still loading the staking params
     else if (isLoading || areMempoolFeeRatesLoading) {
@@ -560,8 +588,7 @@ export const Staking = () => {
           stakingFeeSat,
         );
 
-      const previewReady =
-        signReady && feeRate && availableUTXOs && stakingAmountSat;
+      const previewReady = true;
 
       return (
         <>
